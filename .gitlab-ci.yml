@@ -10,11 +10,26 @@ cache:
     - .platformio-cache/
 
 stages:
- - test
+ - build_test
+ - build_all
 
-before_script:
-  - "pip install -U platformio"
+build_test:
+  stage: build_test
+  before_script:
+    - "pip install -U platformio"
+  script: "pio run --environment esp32-master-sword-debug"
 
-job:
-  stage: test
-  script: "pio run --environment esp32doit-devkit-v1"
+build_all:
+  stage: build_all
+  before_script:
+    - "pip install -U platformio"
+    - "mkdir -p $CI_PROJECT_DIR/tmp/build"
+  script: "platformio ci --build-dir=\"$CI_PROJECT_DIR/tmp/build\" --keep-build-dir --project-conf platformio.ini"
+  variables: {PLATFORMIO_CI_SRC: "src"}
+  artifacts:
+    paths:
+    - $CI_PROJECT_DIR/tmp/build/.pio/build/esp32-master-sword-release/firmware.elf
+    - $CI_PROJECT_DIR/tmp/build/.pio/build/esp32-master-sword-release/firmware.bin
+    - $CI_PROJECT_DIR/tmp/build/.pio/build/esp32-master-sword-debug/firmware.elf
+    - $CI_PROJECT_DIR/tmp/build/.pio/build/esp32-master-sword-debug/firmware.bin
+    expire_in: 1 week
